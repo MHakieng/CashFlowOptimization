@@ -1,0 +1,16 @@
+[
+  {
+    "miktar": 100.0,
+    "tarih": "2025-05-02T00:00:00",
+    "kategori": "Maaş",
+    "aciklama": "haki",
+    "taraf": "Haki"
+  },
+  {
+    "miktar": 100.0,
+    "tarih": "2025-05-02T00:00:00",
+    "kategori": "fatura",
+    "aciklama": "11",
+    "taraf": "Haki"
+  }
+]

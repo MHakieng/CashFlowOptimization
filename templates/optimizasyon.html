@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+
+{% block title %}Optimizasyon - Nakit Akışı Platformu{% endblock %}
+
+{% block page_title %}Nakit Akışı Optimizasyonu{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="alert alert-info">
+            <div class="d-flex">
+                <div class="me-3">
+                    <i class="fas fa-info-circle fa-2x"></i>
+                </div>
+                <div>
+                    <h5 class="alert-heading">Optimizasyon Nedir?</h5>
+                    <p class="mb-0">Nakit akışınızı daha verimli hale getirmek için küçük işlemleri birleştirebilir veya maliyetleri azaltabilirsiniz.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- İşlem Sayısı Optimizasyonu -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-compress-arrows-alt me-2"></i>İşlem Sayısı Optimizasyonu</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    Küçük işlemleri birleştirerek toplam işlem sayınızı azaltın.
+                </p>
+                
+                <form action="{{ url_for('islem_sayisi_optimize') }}" method="POST" class="mt-4">
+                    <div class="mb-3">
+                        <label for="taraf" class="form-label">Hangi taraf için?</label>
+                        <select class="form-select shadow-none" id="taraf" name="taraf">
+                            <option value="">Tüm Taraflar</option>
+                            {% for taraf in taraflar %}
+                            <option value="{{ taraf }}">{{ taraf }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="min_islem_tutari" class="form-label">Minimum İşlem Tutarı</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control shadow-none" id="min_islem_tutari" name="min_islem_tutari" value="500" min="0" step="100">
+                            <span class="input-group-text">TL</span>
+                        </div>
+                        <div class="form-text">Bu tutarın altındaki işlemler birleştirilecektir.</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-play me-2"></i>Optimizasyonu Başlat
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Maliyet Optimizasyonu -->
+    <div class="col-md-6 mb-4">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-coins me-2"></i>Maliyet Optimizasyonu</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-muted">
+                    İşlem maliyetlerini minimize ederek nakit akışınızı maksimum verimlilikle yönetin.
+                </p>
+                
+                <form action="{{ url_for('maliyet_optimize') }}" method="POST" class="mt-4">
+                    <div class="mb-3">
+                        <label for="taraf_maliyet" class="form-label">Hangi taraf için?</label>
+                        <select class="form-select shadow-none" id="taraf_maliyet" name="taraf">
+                            <option value="">Tüm Taraflar</option>
+                            {% for taraf in taraflar %}
+                            <option value="{{ taraf }}">{{ taraf }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="hedef_bakiye" class="form-label">Minimum Bakiye Hedefi</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control shadow-none" id="hedef_bakiye" name="hedef_bakiye" value="0" step="100">
+                            <span class="input-group-text">TL</span>
+                        </div>
+                        <div class="form-text">İşlem seçimi sonrasında ulaşılacak minimum bakiye.</div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-play me-2"></i>Optimizasyonu Başlat
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Hızlı İpuçları -->
+    <div class="col-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-lightbulb me-2"></i>Hızlı İpuçları</h5>
+            </div>
+            <div class="card-body py-4">
+                <div class="row g-3">
+                    <div class="col-md-4">
+                        <div class="d-flex">
+                            <div class="me-3 text-primary">
+                                <i class="fas fa-calendar-alt fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6>Aylık Ödemeler</h6>
+                                <p class="small text-muted mb-0">Aynı tarafa yapılan küçük ödemeleri aylık tek ödemede birleştirin.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex">
+                            <div class="me-3 text-success">
+                                <i class="fas fa-bullseye fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6>Kritik Dönemler</h6>
+                                <p class="small text-muted mb-0">Kritik dönemlerde çıkışları minimize edin, likiditeyi koruyun.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="d-flex">
+                            <div class="me-3 text-warning">
+                                <i class="fas fa-balance-scale fa-2x"></i>
+                            </div>
+                            <div>
+                                <h6>Taraf Dengeleme</h6>
+                                <p class="small text-muted mb-0">Önemli taraflarla ödeme planlarınızı uyumlu hale getirin.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

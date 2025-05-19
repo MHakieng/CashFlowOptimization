@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+
+{% block title %}{{ optimizasyon_tipi }} Sonuçları - Nakit Akışı Platformu{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('optimizasyon_sayfasi') }}">Optimizasyon</a></li>
+                <li class="breadcrumb-item active">{{ optimizasyon_tipi }} Sonuçları</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-calculator me-2"></i>{{ optimizasyon_tipi }} Sonuçları</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>Optimizasyon başarıyla tamamlandı!
+                </div>
+                
+                <div class="row mb-4">
+                    {% for taraf, sonuc in sonuc.items() %}
+                    <div class="col-md-6 mb-3">
+                        <div class="card h-100">
+                            <div class="card-header">
+                                <h5 class="mb-0">{{ taraf }} Optimizasyon Sonucu</h5>
+                            </div>
+                            <div class="card-body">
+                                {% if "orijinal_islem_sayisi" in sonuc %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6>Orijinal İşlem Sayısı:</h6>
+                                        <h3>{{ sonuc.orijinal_islem_sayisi }}</h3>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Optimize Edilmiş İşlem Sayısı:</h6>
+                                        <h3>{{ sonuc.optimize_edilmis_islem_sayisi }}</h3>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                
+                                {% if "azaltilan_islem_sayisi" in sonuc %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    <strong>{{ sonuc.azaltilan_islem_sayisi }}</strong> adet işlem optimize edilerek birleştirildi.
+                                </div>
+                                {% endif %}
+                                
+                                {% if "orijinal_maliyet" in sonuc and "optimize_edilmis_maliyet" in sonuc %}
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <h6>Orijinal Maliyet:</h6>
+                                        <h3>{{ sonuc.orijinal_maliyet }} TL</h3>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <h6>Optimize Edilmiş Maliyet:</h6>
+                                        <h3>{{ sonuc.optimize_edilmis_maliyet }} TL</h3>
+                                    </div>
+                                </div>
+                                
+                                <div class="alert alert-success">
+                                    <i class="fas fa-coins me-2"></i>
+                                    <strong>{{ (sonuc.orijinal_maliyet - sonuc.optimize_edilmis_maliyet)|round(2) }} TL</strong> maliyet tasarrufu sağlandı.
+                                </div>
+                                
+                                {% if "optimize_nakit_akisi" in sonuc %}
+                                <div class="alert alert-info">
+                                    <i class="fas fa-info-circle me-2"></i>
+                                    Optimize edilmiş nakit akışı: <strong>{{ sonuc.optimize_nakit_akisi|round(2) }} TL</strong>
+                                </div>
+                                {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                
+                {% if optimizasyon_tipi == "İşlem Sayısı Optimizasyonu" %}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Optimize Edilmiş İşlemler</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Kategori</th>
+                                                <th>Tarih</th>
+                                                <th>Miktar</th>
+                                                <th>Açıklama</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for taraf, sonuc in sonuc.items() %}
+                                                {% for islem in sonuc.optimize_edilmis_islemler %}
+                                                <tr>
+                                                    <td>{{ islem.kategori }}</td>
+                                                    <td>{{ islem.tarih.strftime('%d/%m/%Y') }}</td>
+                                                    <td>{{ islem.miktar|round(2) }} TL</td>
+                                                    <td>{{ islem.aciklama }}</td>
+                                                </tr>
+                                                {% endfor %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if optimizasyon_tipi == "Maliyet Optimizasyonu" %}
+                <div class="row mb-4">
+                    <div class="col-12">
+                        <div class="card">
+                            <div class="card-header">
+                                <h5 class="mb-0">Seçilen Optimum İşlemler</h5>
+                            </div>
+                            <div class="card-body">
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Kategori</th>
+                                                <th>Tarih</th>
+                                                <th>Miktar</th>
+                                                <th>Açıklama</th>
+                                                <th>İşlem Tipi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for taraf, sonuc in sonuc.items() %}
+                                                {% if "secilen_islemler" in sonuc %}
+                                                    {% for islem in sonuc.secilen_islemler %}
+                                                    <tr>
+                                                        <td>{{ islem.kategori }}</td>
+                                                        <td>{{ islem.tarih.strftime('%d/%m/%Y') }}</td>
+                                                        <td>{{ islem.miktar|round(2) }} TL</td>
+                                                        <td>{{ islem.aciklama }}</td>
+                                                        <td>
+                                                            {% if islem in sonuc.taraf_girisler %}
+                                                            <span class="badge bg-success">Giriş</span>
+                                                            {% else %}
+                                                            <span class="badge bg-danger">Çıkış</span>
+                                                            {% endif %}
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-12">
+                        <a href="{{ url_for('optimizasyon_sayfasi') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Optimizasyon Sayfasına Dön
+                        </a>
+                        <a href="{{ url_for('home') }}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-home me-2"></i>Ana Sayfaya Dön
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

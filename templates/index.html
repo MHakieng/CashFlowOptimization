@@ -1,0 +1,220 @@
+{% extends "base.html" %}
+
+{% block title %}Ana Sayfa - Nakit Akışı Platformu{% endblock %}
+
+{% block page_title %}Nakit Akışı Panosu{% endblock %}
+
+{% block content %}
+{% set has_data = taraflar|length > 0 or taraf_durumlari|length > 0 %}
+
+{% if not has_data %}
+<div class="alert alert-info shadow-sm mb-4">
+    <h4 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Hoş Geldiniz!</h4>
+    <p>Nakit akışı platformuna hoş geldiniz. Başlamak için aşağıdaki adımları izleyebilirsiniz:</p>
+    <hr>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="d-grid">
+                <a href="{{ url_for('taraflar_sayfasi') }}" class="btn btn-primary btn-lg mb-2">
+                    <i class="fas fa-users me-2"></i>Taraf Ekle
+                </a>
+                <p class="small text-muted">İş yaptığınız müşteri, tedarikçi gibi tarafları ekleyin.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-grid">
+                <a href="{{ url_for('islemler_sayfasi') }}" class="btn btn-success btn-lg mb-2">
+                    <i class="fas fa-exchange-alt me-2"></i>İşlem Ekle
+                </a>
+                <p class="small text-muted">Nakit giriş ve çıkışlarınızı kaydedin.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="d-grid">
+                <a href="{{ url_for('simulasyon_sayfasi') }}" class="btn btn-info text-white btn-lg mb-2">
+                    <i class="fas fa-chart-line me-2"></i>Tahmin Oluştur
+                </a>
+                <p class="small text-muted">Gelecek nakit akışlarınızı simüle edin.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-tachometer-alt me-2"></i>Nakit Akışı Özet</h4>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <!-- Genel Durum Kartı -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body text-center">
+                                <h5 class="card-title">Genel Bakiye</h5>
+                                <div class="display-4 my-3 {% if genel_durum >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                    {{ genel_durum|round(2) }} TL
+                                </div>
+                                <div class="row mt-3">
+                                    <div class="col-6">
+                                        <p class="text-success mb-1">
+                                            {% if kategoriler.girisler %}
+                                                + {{ kategoriler.girisler.values()|sum|round(2) }} TL
+                                            {% else %}
+                                                + 0.00 TL
+                                            {% endif %}
+                                        </p>
+                                        <small class="text-muted">Toplam Giriş</small>
+                                    </div>
+                                    <div class="col-6">
+                                        <p class="text-danger mb-1">
+                                            {% if kategoriler.cikislar %}
+                                                - {{ kategoriler.cikislar.values()|sum|round(2) }} TL
+                                            {% else %}
+                                                - 0.00 TL
+                                            {% endif %}
+                                        </p>
+                                        <small class="text-muted">Toplam Çıkış</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Hızlı İşlemler -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title text-center mb-4">Hızlı İşlemler</h5>
+                                <div class="d-grid gap-2">
+                                    <a href="{{ url_for('islemler_sayfasi') }}" class="btn btn-primary btn-lg">
+                                        <i class="fas fa-plus-circle me-2"></i>Yeni İşlem
+                                    </a>
+                                    <a href="{{ url_for('taraflar_sayfasi') }}" class="btn btn-secondary btn-lg">
+                                        <i class="fas fa-users me-2"></i>Tarafları Yönet
+                                    </a>
+                                    <a href="{{ url_for('raporlar_sayfasi') }}" class="btn btn-info text-white btn-lg">
+                                        <i class="fas fa-file-alt me-2"></i>Rapor Oluştur
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Gelecek Nakit Akışı Kartı -->
+                    <div class="col-md-4 mb-3">
+                        <div class="card h-100 border-0 shadow-sm">
+                            <div class="card-body">
+                                <h5 class="card-title text-center mb-3">Yaklaşan 3 Ay</h5>
+                                {% if tahminler and tahminler|length > 0 %}
+                                <div class="table-responsive">
+                                    <table class="table table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Ay</th>
+                                                <th class="text-end">Tahmini Bakiye</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {% for tahmin in tahminler[:3] %}
+                                            <tr>
+                                                <td>{{ tahmin.ay }}/{{ tahmin.yil }}</td>
+                                                <td class="text-end {% if tahmin.tahmini_bakiye >= 0 %}text-success{% else %}text-danger{% endif %}">
+                                                    {{ tahmin.tahmini_bakiye|round(2) }} TL
+                                                </td>
+                                            </tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                                {% else %}
+                                <div class="text-center py-4">
+                                    <i class="fas fa-chart-line text-muted fa-3x mb-3"></i>
+                                    <p class="text-muted">Tahmin oluşturmak için işlem verisi ekleyin.</p>
+                                </div>
+                                {% endif %}
+                                <div class="text-center mt-2">
+                                    <a href="{{ url_for('simulasyon_sayfasi') }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fas fa-chart-line me-1"></i>Detaylı Tahmin
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Ana Grafikler -->
+<div class="row mb-4">
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i>Nakit Akışı Grafiği</h5>
+            </div>
+            <div class="card-body">
+                {% if nakit_akisi_grafik %}
+                <img src="{{ url_for('static', filename='img/' + nakit_akisi_grafik) }}" class="img-fluid" alt="Nakit Akışı Grafiği">
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-line text-muted fa-4x mb-3"></i>
+                    <p class="text-muted">Nakit akışı verisi bulunmuyor. <br>Veri eklemek için işlem oluşturun.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>Kategori Dağılımı</h5>
+            </div>
+            <div class="card-body">
+                {% if kategori_grafik %}
+                <img src="{{ url_for('static', filename='img/' + kategori_grafik) }}" class="img-fluid" alt="Kategori Grafiği">
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-chart-pie text-muted fa-4x mb-3"></i>
+                    <p class="text-muted">Kategori verisi bulunmuyor. <br>Veri eklemek için işlem oluşturun.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Taraf Karşılaştırma -->
+<div class="row mb-4">
+    <div class="col-lg-12">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-users me-2"></i>Taraf Karşılaştırma</h5>
+                <a href="{{ url_for('taraflar_sayfasi') }}" class="btn btn-sm btn-outline-primary">
+                    <i class="fas fa-user-cog me-1"></i>Tarafları Yönet
+                </a>
+            </div>
+            <div class="card-body">
+                {% if taraflar and taraflar|length > 0 and taraf_karsilastirma_grafik %}
+                <img src="{{ url_for('static', filename='img/' + taraf_karsilastirma_grafik) }}" class="img-fluid" alt="Taraf Karşılaştırma Grafiği">
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users text-muted fa-4x mb-3"></i>
+                    <p class="text-muted">Henüz taraf bulunmuyor veya taraflar için işlem verisi yok. <br>
+                    Taraf eklemek için <a href="{{ url_for('taraflar_sayfasi') }}">tıklayın</a>.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // JavaScript
+</script>
+{% endblock %} 

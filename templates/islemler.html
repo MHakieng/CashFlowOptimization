@@ -1,0 +1,245 @@
+{% extends "base.html" %}
+
+{% block title %}İşlemler - Nakit Akışı Platformu{% endblock %}
+
+{% block page_title %}Nakit Akışı İşlemleri{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <div class="col-lg-4">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-light">
+                <h5 class="mb-0"><i class="fas fa-plus-circle me-2"></i>Yeni İşlem</h5>
+            </div>
+            <div class="card-body">
+                <form action="{{ url_for('islem_ekle') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="islem_tipi" class="form-label">İşlem Tipi</label>
+                        <div class="d-flex">
+                            <div class="form-check form-check-inline flex-grow-1 border rounded p-3 text-center me-0">
+                                <input class="form-check-input" type="radio" name="islem_tipi" id="giris" value="giris" checked>
+                                <label class="form-check-label w-100" for="giris">
+                                    <i class="fas fa-arrow-down text-success me-1"></i>Nakit Girişi
+                                </label>
+                            </div>
+                            <div class="form-check form-check-inline flex-grow-1 border rounded p-3 text-center ms-2 me-0">
+                                <input class="form-check-input" type="radio" name="islem_tipi" id="cikis" value="cikis">
+                                <label class="form-check-label w-100" for="cikis">
+                                    <i class="fas fa-arrow-up text-danger me-1"></i>Nakit Çıkışı
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="miktar" class="form-label">Miktar</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control shadow-none" id="miktar" name="miktar" step="0.01" min="0" required>
+                            <span class="input-group-text">TL</span>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="tarih" class="form-label">Tarih</label>
+                        <input type="date" class="form-control shadow-none" id="tarih" name="tarih" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="kategori" class="form-label">Kategori</label>
+                        <input type="text" class="form-control shadow-none" id="kategori" name="kategori" placeholder="Örn: Maaşlar, Satışlar, Faturalar" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="aciklama" class="form-label">Açıklama <span class="text-muted">(Opsiyonel)</span></label>
+                        <textarea class="form-control shadow-none" id="aciklama" name="aciklama" rows="2" placeholder="İşlem hakkında kısa açıklama..."></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="taraf" class="form-label">Taraf <span class="text-muted">(Opsiyonel)</span></label>
+                        <select class="form-select shadow-none" id="taraf" name="taraf">
+                            <option value="">-- Genel İşlem --</option>
+                            {% for taraf in taraflar %}
+                            <option value="{{ taraf }}">{{ taraf }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="fas fa-save me-2"></i>İşlemi Kaydet
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-lg-8">
+        <div class="card border-0 shadow-sm mb-4">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i>İşlem Özeti</h5>
+                <div>
+                    <span class="badge bg-success me-2">{{ nakit_girisler|length }} Giriş</span>
+                    <span class="badge bg-danger">{{ nakit_cikislar|length }} Çıkış</span>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 text-center h-100">
+                            <h6 class="text-success mb-3">Toplam Nakit Girişi</h6>
+                            <h3 class="text-success mb-3">
+                                {% if nakit_girisler %}
+                                    {{ nakit_girisler|sum(attribute='miktar')|round(2) }} TL
+                                {% else %}
+                                    0.00 TL
+                                {% endif %}
+                            </h3>
+                            <p class="small text-muted mb-0">
+                                {% if nakit_girisler %}
+                                    {% set son_giris = nakit_girisler|sort(attribute='tarih')|last %}
+                                    Son giriş: {{ son_giris.tarih.strftime('%d/%m/%Y') }} ({{ son_giris.miktar|round(2) }} TL)
+                                {% else %}
+                                    Henüz nakit girişi bulunmuyor.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="border rounded p-3 text-center h-100">
+                            <h6 class="text-danger mb-3">Toplam Nakit Çıkışı</h6>
+                            <h3 class="text-danger mb-3">
+                                {% if nakit_cikislar %}
+                                    {{ nakit_cikislar|sum(attribute='miktar')|round(2) }} TL
+                                {% else %}
+                                    0.00 TL
+                                {% endif %}
+                            </h3>
+                            <p class="small text-muted mb-0">
+                                {% if nakit_cikislar %}
+                                    {% set son_cikis = nakit_cikislar|sort(attribute='tarih')|last %}
+                                    Son çıkış: {{ son_cikis.tarih.strftime('%d/%m/%Y') }} ({{ son_cikis.miktar|round(2) }} TL)
+                                {% else %}
+                                    Henüz nakit çıkışı bulunmuyor.
+                                {% endif %}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- İşlem Tabloları -->
+        <ul class="nav nav-tabs" id="islemTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active" id="girisler-tab" data-bs-toggle="tab" data-bs-target="#girisler" type="button">
+                    <i class="fas fa-arrow-down text-success me-1"></i>Nakit Girişleri <span class="badge bg-success ms-1">{{ nakit_girisler|length }}</span>
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link" id="cikislar-tab" data-bs-toggle="tab" data-bs-target="#cikislar" type="button">
+                    <i class="fas fa-arrow-up text-danger me-1"></i>Nakit Çıkışları <span class="badge bg-danger ms-1">{{ nakit_cikislar|length }}</span>
+                </button>
+            </li>
+        </ul>
+        
+        <div class="tab-content" id="islemTabsContent">
+            <!-- Nakit Girişleri Tablosu -->
+            <div class="tab-pane fade show active" id="girisler" role="tabpanel">
+                <div class="card border-top-0 border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Kategori</th>
+                                        <th class="text-end">Miktar</th>
+                                        <th>Açıklama</th>
+                                        <th>Taraf</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for giris in nakit_girisler|sort(attribute='tarih', reverse=true) %}
+                                    <tr>
+                                        <td>{{ giris.tarih.strftime('%d/%m/%Y') }}</td>
+                                        <td>{{ giris.kategori }}</td>
+                                        <td class="text-end text-success fw-bold">{{ giris.miktar|round(2) }} TL</td>
+                                        <td>{{ giris.aciklama }}</td>
+                                        <td>
+                                            {% if giris.taraf %}
+                                            <span class="badge bg-primary">{{ giris.taraf }}</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Genel</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>Henüz nakit girişi bulunmuyor.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Nakit Çıkışları Tablosu -->
+            <div class="tab-pane fade" id="cikislar" role="tabpanel">
+                <div class="card border-top-0 border-0 shadow-sm">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Tarih</th>
+                                        <th>Kategori</th>
+                                        <th class="text-end">Miktar</th>
+                                        <th>Açıklama</th>
+                                        <th>Taraf</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for cikis in nakit_cikislar|sort(attribute='tarih', reverse=true) %}
+                                    <tr>
+                                        <td>{{ cikis.tarih.strftime('%d/%m/%Y') }}</td>
+                                        <td>{{ cikis.kategori }}</td>
+                                        <td class="text-end text-danger fw-bold">{{ cikis.miktar|round(2) }} TL</td>
+                                        <td>{{ cikis.aciklama }}</td>
+                                        <td>
+                                            {% if cikis.taraf %}
+                                            <span class="badge bg-primary">{{ cikis.taraf }}</span>
+                                            {% else %}
+                                            <span class="badge bg-secondary">Genel</span>
+                                            {% endif %}
+                                        </td>
+                                    </tr>
+                                    {% else %}
+                                    <tr>
+                                        <td colspan="5" class="text-center py-4 text-muted">
+                                            <i class="fas fa-info-circle me-2"></i>Henüz nakit çıkışı bulunmuyor.
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Tarih alanına bugünün tarihini otomatik yerleştir
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('tarih').value = today;
+    });
+</script>
+{% endblock %} 

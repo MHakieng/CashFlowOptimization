@@ -1,0 +1,190 @@
+{% extends "base.html" %}
+
+{% block title %}Simülasyon - Nakit Akışı Platformu{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-flask me-2"></i>Nakit Akışı Simülasyonu</h4>
+            </div>
+            <div class="card-body">
+                <p class="lead">
+                    Nakit akışı simülasyonu ve "what-if" analizi ile gelecekteki nakit akışı senaryolarını test edebilir,
+                    olası riskleri önceden görebilir ve güçlü bir finansal planlama yapabilirsiniz.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Monte Carlo Simülasyonu -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-random me-2"></i>Monte Carlo Nakit Akışı Simülasyonu</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    Monte Carlo simülasyonu, gelecekteki nakit akışlarının belirsizliğini modellemek için rastgele
+                    değişkenler kullanır. Bu, farklı senaryolarda nakit akışınızın nasıl davranacağını anlamanıza
+                    yardımcı olur.
+                </p>
+                
+                <form action="{{ url_for('nakit_akisi_simulasyonu') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="taraf_simulasyon" class="form-label">Taraf Seçin:</label>
+                        <select class="form-select" id="taraf_simulasyon" name="taraf">
+                            <option value="">-- Tüm Taraflar --</option>
+                            {% for taraf in taraflar %}
+                            <option value="{{ taraf }}">{{ taraf }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="simulasyon_sayisi" class="form-label">Simülasyon Sayısı:</label>
+                        <input type="number" class="form-control" id="simulasyon_sayisi" name="simulasyon_sayisi" value="100" min="10" max="1000" step="10">
+                        <div class="form-text">Daha yüksek sayılar daha doğru sonuçlar verir ancak daha fazla zaman alır.</div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="giris_degiskenligi" class="form-label">Nakit Giriş Değişkenliği:</label>
+                                <input type="number" class="form-control" id="giris_degiskenligi" name="giris_degiskenligi" value="0.2" min="0" max="0.5" step="0.05">
+                                <div class="form-text">Nakit girişlerindeki belirsizlik oranı (0-0.5).</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="cikis_degiskenligi" class="form-label">Nakit Çıkış Değişkenliği:</label>
+                                <input type="number" class="form-control" id="cikis_degiskenligi" name="cikis_degiskenligi" value="0.15" min="0" max="0.5" step="0.05">
+                                <div class="form-text">Nakit çıkışlarındaki belirsizlik oranı (0-0.5).</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="gecikme_olasiligi" class="form-label">Gecikme Olasılığı:</label>
+                                <input type="number" class="form-control" id="gecikme_olasiligi" name="gecikme_olasiligi" value="0.1" min="0" max="0.5" step="0.05">
+                                <div class="form-text">Ödemelerin gecikmeli yapılma olasılığı (0-0.5).</div>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="ay_sayisi" class="form-label">Simülasyon Ay Sayısı:</label>
+                                <input type="number" class="form-control" id="ay_sayisi" name="ay_sayisi" value="6" min="3" max="24" step="1">
+                                <div class="form-text">Simülasyonu yapılacak dönem uzunluğu.</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Simülasyonu Çalıştır
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+    
+    <!-- What-If Analizi -->
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-question-circle me-2"></i>What-If Analizi</h5>
+            </div>
+            <div class="card-body">
+                <p>
+                    What-If analizi, belirli değişiklikler yapıldığında nakit akışının nasıl etkileneceğini 
+                    göstermenizi sağlar. Örneğin, satışlarda %20 düşüş olursa ne olur? veya tedarik 
+                    maliyetleri %15 artarsa nakit akışı nasıl etkilenir?
+                </p>
+                
+                <form action="{{ url_for('what_if_analizi') }}" method="POST">
+                    <div class="mb-3">
+                        <label for="taraf_whatif" class="form-label">Taraf Seçin:</label>
+                        <select class="form-select" id="taraf_whatif" name="taraf">
+                            <option value="">-- Tüm Taraflar --</option>
+                            {% for taraf in taraflar %}
+                            <option value="{{ taraf }}">{{ taraf }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="senaryo_tipi" class="form-label">Senaryo Türü:</label>
+                        <select class="form-select" id="senaryo_tipi" name="senaryo_tipi">
+                            <option value="giriş_artışı">Nakit Girişlerinde Artış</option>
+                            <option value="giriş_azalışı">Nakit Girişlerinde Azalış</option>
+                            <option value="çıkış_artışı">Nakit Çıkışlarında Artış</option>
+                            <option value="çıkış_azalışı">Nakit Çıkışlarında Azalış</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="oran" class="form-label">Değişim Oranı:</label>
+                        <div class="input-group">
+                            <input type="number" class="form-control" id="oran" name="oran" value="0.2" min="0.05" max="0.5" step="0.05">
+                            <span class="input-group-text">%</span>
+                        </div>
+                        <div class="form-text">Seçilen senaryo için değişim oranı (0.05-0.5).</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="aciklama" class="form-label">Senaryo Açıklaması:</label>
+                        <input type="text" class="form-control" id="aciklama" name="aciklama" placeholder="Satışlarda %20 düşüş senaryosu">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-play me-2"></i>Analizi Çalıştır
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Risk Analizi İpuçları -->
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-shield-alt me-2"></i>Risk Analizi İpuçları</h5>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5><i class="fas fa-exclamation-triangle text-warning me-2"></i>Likidite Riski</h5>
+                                <p>Monte Carlo simülasyonu ile negatif nakit akışı olasılığını hesaplayarak likidite riskinizi ölçebilirsiniz.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5><i class="fas fa-user-check text-success me-2"></i>Müşteri/Tedarikçi Riski</h5>
+                                <p>Önemli tarafların nakit akışı üzerindeki etkisini what-if analizi ile test ederek bağımlılık riskini ölçün.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <h5><i class="fas fa-chart-line text-danger me-2"></i>Sezonsal Dalgalanma</h5>
+                                <p>Belirli dönemlerdeki satış düşüşlerinin etkisini modelleyerek, kritik dönemler için ek önlemler planlayın.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

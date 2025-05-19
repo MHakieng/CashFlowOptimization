@@ -1,0 +1,317 @@
+{% extends "base.html" %}
+
+{% block title %}{{ simulasyon_tipi }} Sonuçları - Nakit Akışı Platformu{% endblock %}
+
+{% block content %}
+<div class="row mb-3">
+    <div class="col-12">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="{{ url_for('home') }}">Ana Sayfa</a></li>
+                <li class="breadcrumb-item"><a href="{{ url_for('simulasyon_sayfasi') }}">Simülasyon</a></li>
+                <li class="breadcrumb-item active">{{ simulasyon_tipi }} Sonuçları</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="card">
+            <div class="card-header">
+                <h4 class="mb-0"><i class="fas fa-chart-area me-2"></i>{{ simulasyon_tipi }} Sonuçları</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>Simülasyon başarıyla tamamlandı!
+                </div>
+                
+                {% if simulasyon_tipi == "Nakit Akışı Simülasyonu" %}
+                    {% for taraf, taraf_sonuc in sonuc.items() %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">{{ taraf }} Monte Carlo Simülasyon Sonuçları</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive mb-4">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Dönem</th>
+                                            <th>Ortalama Bakiye</th>
+                                            <th>Min Bakiye</th>
+                                            <th>Max Bakiye</th>
+                                            <th>Standart Sapma</th>
+                                            <th>Negatif Olasılığı</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for analiz in taraf_sonuc.ay_bazli_analizler %}
+                                        <tr>
+                                            <td>{{ analiz.ay }}/{{ analiz.yil }}</td>
+                                            <td class="{% if analiz.ortalama_bakiye >= 0 %}positive{% else %}negative{% endif %}">
+                                                {{ analiz.ortalama_bakiye|round(2) }} TL
+                                            </td>
+                                            <td class="{% if analiz.minimum_bakiye >= 0 %}positive{% else %}negative{% endif %}">
+                                                {{ analiz.minimum_bakiye|round(2) }} TL
+                                            </td>
+                                            <td class="{% if analiz.maksimum_bakiye >= 0 %}positive{% else %}negative{% endif %}">
+                                                {{ analiz.maksimum_bakiye|round(2) }} TL
+                                            </td>
+                                            <td>{{ analiz.standart_sapma|round(2) }} TL</td>
+                                            <td>
+                                                <span class="badge {% if analiz.negatif_olasılık > 0.3 %}bg-danger{% elif analiz.negatif_olasılık > 0.1 %}bg-warning{% else %}bg-success{% endif %}">
+                                                    {{ (analiz.negatif_olasılık * 100)|round(1) }}%
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Risk Analizi</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                {% for analiz in taraf_sonuc.ay_bazli_analizler %}
+                                                    {% if analiz.negatif_olasılık > 0.1 %}
+                                                    <li class="list-group-item {% if analiz.negatif_olasılık > 0.3 %}list-group-item-danger{% else %}list-group-item-warning{% endif %}">
+                                                        <strong>{{ analiz.ay }}/{{ analiz.yil }}</strong> döneminde 
+                                                        <strong>{{ (analiz.negatif_olasılık * 100)|round(1) }}%</strong> 
+                                                        olasılıkla negatif nakit akışı riski bulunmaktadır.
+                                                    </li>
+                                                    {% endif %}
+                                                {% endfor %}
+                                                
+                                                {% set risk_ay_sayisi = taraf_sonuc.ay_bazli_analizler|selectattr('negatif_olasılık', 'gt', 0.1)|list|length %}
+                                                {% if risk_ay_sayisi == 0 %}
+                                                <li class="list-group-item list-group-item-success">
+                                                    <strong>Tebrikler!</strong> Simülasyon sonuçlarına göre önemli bir nakit akışı riski tespit edilmedi.
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="card">
+                                        <div class="card-header">
+                                            <h6 class="mb-0">Öneri ve Değerlendirmeler</h6>
+                                        </div>
+                                        <div class="card-body">
+                                            <ul class="list-group">
+                                                {% set min_ay = taraf_sonuc.ay_bazli_analizler|sort(attribute='minimum_bakiye')|first %}
+                                                <li class="list-group-item">
+                                                    En kötü senaryoda <strong>{{ min_ay.ay }}/{{ min_ay.yil }}</strong> 
+                                                    döneminde bakiye <strong>{{ min_ay.minimum_bakiye|round(2) }} TL</strong> 
+                                                    seviyesine düşebilir.
+                                                </li>
+                                                
+                                                {% set high_std_ay = taraf_sonuc.ay_bazli_analizler|sort(attribute='standart_sapma', reverse=true)|first %}
+                                                <li class="list-group-item">
+                                                    <strong>{{ high_std_ay.ay }}/{{ high_std_ay.yil }}</strong> 
+                                                    dönemi en yüksek belirsizliğe sahip (<strong>{{ high_std_ay.standart_sapma|round(2) }} TL</strong>
+                                                    standart sapma).
+                                                </li>
+                                                
+                                                {% if risk_ay_sayisi > 0 %}
+                                                <li class="list-group-item list-group-item-warning">
+                                                    <strong>{{ risk_ay_sayisi }}</strong> ay için yüksek risk tespit edildi.
+                                                    Nakit akışını güçlendirmek için ek önlemler almanız önerilir.
+                                                </li>
+                                                {% endif %}
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                
+                {% if simulasyon_tipi == "What-If Analizi" %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Senaryo Detayları</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row mb-4">
+                                <div class="col-md-6">
+                                    <table class="table">
+                                        <tr>
+                                            <th>Senaryo Tipi:</th>
+                                            <td>
+                                                {% if sonuc.senaryo.tip == "giriş_artışı" %}
+                                                    Nakit Girişlerinde Artış
+                                                {% elif sonuc.senaryo.tip == "giriş_azalışı" %}
+                                                    Nakit Girişlerinde Azalış
+                                                {% elif sonuc.senaryo.tip == "çıkış_artışı" %}
+                                                    Nakit Çıkışlarında Artış
+                                                {% elif sonuc.senaryo.tip == "çıkış_azalışı" %}
+                                                    Nakit Çıkışlarında Azalış
+                                                {% endif %}
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <th>Değişim Oranı:</th>
+                                            <td>{{ (sonuc.senaryo.oran * 100)|round(1) }}%</td>
+                                        </tr>
+                                        {% if sonuc.senaryo.aciklama %}
+                                        <tr>
+                                            <th>Açıklama:</th>
+                                            <td>{{ sonuc.senaryo.aciklama }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        {% if "taraf" in sonuc.sonuc %}
+                                        <tr>
+                                            <th>Taraf:</th>
+                                            <td>{{ sonuc.sonuc.taraf }}</td>
+                                        </tr>
+                                        {% endif %}
+                                    </table>
+                                </div>
+                                
+                                <div class="col-md-6">
+                                    <div class="alert 
+                                        {% if sonuc.senaryo.tip == "giriş_artışı" or sonuc.senaryo.tip == "çıkış_azalışı" %}
+                                            alert-success
+                                        {% else %}
+                                            alert-warning
+                                        {% endif %}">
+                                        <i class="fas fa-info-circle me-2"></i>
+                                        {% if "taraf" in sonuc.sonuc %}
+                                            Bu senaryo, <strong>{{ sonuc.sonuc.taraf }}</strong> için nakit durumunu etkilemektedir.
+                                        {% else %}
+                                            Bu senaryo, tüm tarafların nakit durumunu etkilemektedir.
+                                        {% endif %}
+                                    </div>
+                                    
+                                    {% if "taraf" in sonuc.sonuc %}
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h6>Senaryo Sonrası Nakit Durumu:</h6>
+                                                <h3 class="{% if sonuc.sonuc.nakit_durumu >= 0 %}positive{% else %}negative{% endif %}">
+                                                    {{ sonuc.sonuc.nakit_durumu|round(2) }} TL
+                                                </h3>
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        <div class="card">
+                                            <div class="card-body">
+                                                <h6>Senaryo Sonrası Genel Nakit Durumu:</h6>
+                                                <h3 class="{% if sonuc.sonuc.genel_durum >= 0 %}positive{% else %}negative{% endif %}">
+                                                    {{ sonuc.sonuc.genel_durum|round(2) }} TL
+                                                </h3>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Nakit Akışı Tahmini</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="table-responsive">
+                                        <table class="table table-hover">
+                                            <thead>
+                                                <tr>
+                                                    <th>Dönem</th>
+                                                    <th>Tahmini Giriş</th>
+                                                    <th>Tahmini Çıkış</th>
+                                                    <th>Net Nakit Akışı</th>
+                                                    <th>Tahmini Bakiye</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% if "taraf" in sonuc.sonuc %}
+                                                    {% for tahmin in sonuc.sonuc.tahminler %}
+                                                    <tr>
+                                                        <td>{{ tahmin.ay }}/{{ tahmin.yil }}</td>
+                                                        <td class="positive">{{ tahmin.tahmini_giris|round(2) }} TL</td>
+                                                        <td class="negative">{{ tahmin.tahmini_cikis|round(2) }} TL</td>
+                                                        <td class="{% if tahmin.net_nakit_akisi >= 0 %}positive{% else %}negative{% endif %}">
+                                                            {{ tahmin.net_nakit_akisi|round(2) }} TL
+                                                        </td>
+                                                        <td class="{% if tahmin.tahmini_bakiye >= 0 %}positive{% else %}negative{% endif %}">
+                                                            {{ tahmin.tahmini_bakiye|round(2) }} TL
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    {% for tahmin in sonuc.sonuc.genel_tahminler %}
+                                                    <tr>
+                                                        <td>{{ tahmin.ay }}/{{ tahmin.yil }}</td>
+                                                        <td class="positive">{{ tahmin.tahmini_giris|round(2) }} TL</td>
+                                                        <td class="negative">{{ tahmin.tahmini_cikis|round(2) }} TL</td>
+                                                        <td class="{% if tahmin.net_nakit_akisi >= 0 %}positive{% else %}negative{% endif %}">
+                                                            {{ tahmin.net_nakit_akisi|round(2) }} TL
+                                                        </td>
+                                                        <td class="{% if tahmin.tahmini_bakiye >= 0 %}positive{% else %}negative{% endif %}">
+                                                            {{ tahmin.tahmini_bakiye|round(2) }} TL
+                                                        </td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                {% endif %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {% if "taraf_durumlari" in sonuc.sonuc %}
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h5 class="mb-0">Taraf Bazlı Etkiler</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Taraf</th>
+                                            <th>Senaryo Sonrası Nakit Durumu</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for taraf, durum in sonuc.sonuc.taraf_durumlari.items() %}
+                                        <tr>
+                                            <td>{{ taraf }}</td>
+                                            <td class="{% if durum >= 0 %}positive{% else %}negative{% endif %}">
+                                                {{ durum|round(2) }} TL
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
+                
+                <div class="row">
+                    <div class="col-12">
+                        <a href="{{ url_for('simulasyon_sayfasi') }}" class="btn btn-primary">
+                            <i class="fas fa-arrow-left me-2"></i>Simülasyon Sayfasına Dön
+                        </a>
+                        <a href="{{ url_for('home') }}" class="btn btn-secondary ms-2">
+                            <i class="fas fa-home me-2"></i>Ana Sayfaya Dön
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

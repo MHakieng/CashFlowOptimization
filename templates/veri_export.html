@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+
+{% block title %}Veri Dışa/İçe Aktarma - Nakit Akışı Platformu{% endblock %}
+
+{% block page_title %}Veri Dışa/İçe Aktarma{% endblock %}
+
+{% block content %}
+<div class="row mb-4">
+    <!-- Dışa Aktarma Kartı -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-file-export me-2"></i>Veri Dışa Aktarma</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    <i class="fas fa-info-circle me-2"></i> Verilerinizi yedeklemek veya başka bir sistemde kullanmak için dışa aktarabilirsiniz.
+                </div>
+                
+                <h5 class="mt-4 mb-3">JSON Formatında (Tam Yedek)</h5>
+                <p>Tüm veri tabanını JSON formatında dışa aktarır. Bu format Nakit Akışı Platformuna geri yükleme için uygundur.</p>
+                <div class="d-grid">
+                    <a href="{{ url_for('export_json') }}" class="btn btn-primary">
+                        <i class="fas fa-file-code me-2"></i>Tüm Verileri JSON Olarak İndir
+                    </a>
+                </div>
+                
+                <hr class="my-4">
+                
+                <h5 class="mb-3">CSV Formatında (Tablolar)</h5>
+                <p>Veri tablolarını CSV formatında dışa aktarır. Bu format Excel, Google Sheets gibi programlarda açılabilir.</p>
+                
+                <div class="row">
+                    <div class="col-md-4 mb-2">
+                        <div class="d-grid">
+                            <a href="{{ url_for('export_csv', veri_tipi='nakit_girisler') }}" class="btn btn-success">
+                                <i class="fas fa-file-csv me-2"></i>Nakit Girişleri
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <div class="d-grid">
+                            <a href="{{ url_for('export_csv', veri_tipi='nakit_cikislar') }}" class="btn btn-danger">
+                                <i class="fas fa-file-csv me-2"></i>Nakit Çıkışları
+                            </a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                        <div class="d-grid">
+                            <a href="{{ url_for('export_csv', veri_tipi='taraflar') }}" class="btn btn-info text-white">
+                                <i class="fas fa-file-csv me-2"></i>Taraflar
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- İçe Aktarma Kartı -->
+    <div class="col-lg-6">
+        <div class="card border-0 shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-file-import me-2"></i>Veri İçe Aktarma</h4>
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    <i class="fas fa-exclamation-triangle me-2"></i> <strong>Dikkat:</strong> İçe aktarma işlemi mevcut verilerin üzerine yazacaktır. Önceden yedek almanız önerilir.
+                </div>
+                
+                <h5 class="mt-4 mb-3">JSON Dosyasından Geri Yükleme</h5>
+                <p>Daha önce dışa aktarılmış JSON formatındaki bir veri dosyasını içe aktarın.</p>
+                
+                <form action="{{ url_for('import_json') }}" method="post" enctype="multipart/form-data">
+                    <div class="mb-3">
+                        <label for="import_file" class="form-label">JSON Dosyası Seç</label>
+                        <input class="form-control" type="file" id="import_file" name="import_file" accept=".json">
+                        <div class="form-text">Sadece .json uzantılı dosyaları yükleyebilirsiniz.</div>
+                    </div>
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-upload me-2"></i>Dosyayı Yükle ve Geri Yükle
+                        </button>
+                    </div>
+                </form>
+                
+                <hr class="my-4">
+                
+                <div class="alert alert-info">
+                    <i class="fas fa-lightbulb me-2"></i> <strong>Bilgi:</strong> 
+                    <ul class="mb-0">
+                        <li>İçe aktarma işlemi mevcut verilerin üzerine yazacaktır.</li>
+                        <li>İşlem öncesinde otomatik yedek alınacaktır.</li>
+                        <li>Hatalı dosyalar veri bozulmasına neden olabilir.</li>
+                        <li>Sorun yaşarsanız, Yedekler sayfasından eski bir yedeği geri yükleyebilirsiniz.</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
